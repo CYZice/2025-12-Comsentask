@@ -1,0 +1,12 @@
+# YOLOv8 配置文件 - 绝对路径版
+
+path: D:/Microsoft VS Code/PYTHON/comsen-task-1/project/dataset_yolo
+
+# 2. 这里的路径会自动拼接到上面的 path 后面
+train: train/images
+val: val/images
+
+# 3. 类别设置
+nc: 1
+names:
+  0: 'Magic Cube'
