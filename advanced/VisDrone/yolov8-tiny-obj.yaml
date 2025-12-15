@@ -1,0 +1,58 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# YOLOv8-XS (Extra Small Target Optimized)
+# 结构：P2, P3, P4 (砍掉了 P5)
+# 适用：VisDrone, 遥感图像, 显微镜图像
+
+# Parameters
+nc: 80  # number of classes
+scales: 
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]
+  m: [0.67, 0.75, 768]
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.25, 512]
+
+# Backbone (骨干网保持不变)
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv, [64, 3, 2]]  # 0-P1/2
+  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4
+  - [-1, 3, C2f, [128, True]]  # 2
+  - [-1, 1, Conv, [256, 3, 2]] # 3-P3/8
+  - [-1, 6, C2f, [256, True]]  # 4
+  - [-1, 1, Conv, [512, 3, 2]] # 5-P4/16
+  - [-1, 6, C2f, [512, True]]  # 6
+  - [-1, 1, Conv, [1024, 3, 2]] # 7-P5/32
+  - [-1, 3, C2f, [1024, True]]  # 8
+  - [-1, 1, SPPF, [1024, 5]]    # 9
+
+# Head (修改部分：去掉了 P5 的上采样路径，也去掉了最后的 P5 输出)
+head:
+  # === 上采样过程 (FPN) ===
+  # 既然不要 P5 输出，我们从 P4 开始往上走
+  
+  # 1. P4 -> P3
+  - [6, 1, nn.Upsample, [None, 2, 'nearest']] # 10 (取 Backbone 的 P4)
+  - [[-1, 4], 1, Concat, [1]] # cat backbone P3
+  - [-1, 3, C2f, [512]]       # 12 (输出 P3 特征)
+
+  # 2. P3 -> P2
+  - [-1, 1, nn.Upsample, [None, 2, 'nearest']]
+  - [[-1, 2], 1, Concat, [1]] # cat backbone P2
+  - [-1, 3, C2f, [256]]       # 15 (输出 P2 特征 - 最小特征图，最高分辨率)
+
+  # === 下采样过程 (PAN) ===
+  # 3. P2 -> P3
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 12], 1, Concat, [1]] # cat head P3 (上面的第12层)
+  - [-1, 3, C2f, [512]]        # 18 (输出 P3)
+
+  # 4. P3 -> P4
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [[-1, 6], 1, Concat, [1]]  # cat backbone P4 (注意这里连回 Backbone 的 P4)
+  # 注意：这里我们不再往 P5 走了，到 P4 就截止
+  - [-1, 3, C2f, [1024]]       # 21 (输出 P4 - 最大感受野)
+
+  # Detect 层
+  # 只用 [15(P2), 18(P3), 21(P4)]，抛弃了 P5
+  - [[15, 18, 21], 1, Detect, [nc]] 

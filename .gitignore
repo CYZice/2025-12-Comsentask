@@ -49,6 +49,8 @@ project/augmented_data/
 project/dataset_yolo/
 project/train/
 project/val/
+advanced/VisDrone/small_datasets/
+advanced/VisDrone/VISDRONE-2/
 *.zip
 *.tar.gz
 *.rar
