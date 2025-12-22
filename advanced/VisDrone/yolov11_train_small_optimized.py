@@ -24,7 +24,7 @@ def train_model():
         bool: 如果训练成功返回 True，否则返回 False
     """
     # 使用YOLOv8模型（作为YOLOv11的替代）
-    model = YOLO("runs/train/yolov8-tiny-obj2/weights/best.pt")  # 使用YOLOv8n模型
+    model = YOLO("runs/train/baseline/weights/best.pt")  # 使用YOLOv8n模型
 
     # 使用小数据集的data.yaml路径
     data_yaml_path = "small_datasets/data.yaml"
@@ -40,7 +40,7 @@ def train_model():
         workers=0,  # 设置为0，避免多进程死锁/卡顿
         amp=True,  # 混合精度训练，显存小的话设为 True (默认就是True)
         project="runs/train",  # 项目目录
-        name="yolov8-tiny-obj",  # 实验名称
+        name="baseline",  # 实验名称
         save=True,  # 保存训练结果
     )
 
